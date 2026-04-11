@@ -1,9 +1,13 @@
 #include <GL/glut.h>
 #include <cmath>
 #include <cstring>
-
+GLuint grassTexOutfield;
+GLuint grassTexInfield;
 float angleX = 20, angleY = 30;
 float zoom = -60;
+float posX = 0.0f;
+float posY = 0.0f;
+float posZ = 0.0f;
 
 // Draw circle (for field)
 void drawCircle(float radius, float height) {
@@ -451,19 +455,336 @@ void drawFlagPoles() {
         glPopMatrix();
     }
 }
+
+
+void generateGrassTextures() {
+    srand(42);
+
+    // ── OUTFIELD TEXTURE — darker green with noise ───────────
+    {
+        const int W = 128, H = 128;
+        unsigned char pixels[W * H * 3];
+
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+                int idx = (y * W + x) * 3;
+                int noise = (rand() % 25) - 12;
+                int blade = (rand() % 100 < 6) ? 30 : 0;
+
+                int r = 25  + noise/3;
+                int g = 110 + noise + blade;
+                int b = 25  + noise/4;
+
+                pixels[idx+0] = (unsigned char)(r < 0 ? 0 : r > 255 ? 255 : r);
+                pixels[idx+1] = (unsigned char)(g < 0 ? 0 : g > 255 ? 255 : g);
+                pixels[idx+2] = (unsigned char)(b < 0 ? 0 : b > 255 ? 255 : b);
+            }
+        }
+
+        glGenTextures(1, &grassTexOutfield);
+        glBindTexture(GL_TEXTURE_2D, grassTexOutfield);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W, H, 0,
+                     GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    }
+
+    // ── INFIELD TEXTURE — brighter green with noise ──────────
+    {
+        const int W = 128, H = 128;
+        unsigned char pixels[W * H * 3];
+
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+                int idx = (y * W + x) * 3;
+                int noise = (rand() % 25) - 12;
+                int blade = (rand() % 100 < 6) ? 35 : 0;
+
+                int r = 20  + noise/3;
+                int g = 150 + noise + blade;   // brighter than outfield
+                int b = 20  + noise/4;
+
+                pixels[idx+0] = (unsigned char)(r < 0 ? 0 : r > 255 ? 255 : r);
+                pixels[idx+1] = (unsigned char)(g < 0 ? 0 : g > 255 ? 255 : g);
+                pixels[idx+2] = (unsigned char)(b < 0 ? 0 : b > 255 ? 255 : b);
+            }
+        }
+
+        glGenTextures(1, &grassTexInfield);
+        glBindTexture(GL_TEXTURE_2D, grassTexInfield);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W, H, 0,
+                     GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    }
+}
+
+void drawTexturedGround() {
+    int   segments = 360;
+    float scale    = 0.08f;
+
+    glEnable(GL_TEXTURE_2D);
+
+    // ── OUTFIELD — darker green texture ─────────────────────
+    glBindTexture(GL_TEXTURE_2D, grassTexOutfield);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    for (int i = 0; i < segments; i++) {
+        float t1 = i       * 2 * PI / segments;
+        float t2 = (i + 1) * 2 * PI / segments;
+
+        float x1i = 11.0f * cos(t1), z1i = 11.0f * sin(t1);
+        float x2i = 11.0f * cos(t2), z2i = 11.0f * sin(t2);
+        float x1o = 24.8f * cos(t1), z1o = 24.8f * sin(t1);
+        float x2o = 24.8f * cos(t2), z2o = 24.8f * sin(t2);
+
+        glBegin(GL_QUADS);
+            glTexCoord2f(x1i*scale+0.5f, z1i*scale+0.5f); glVertex3f(x1i, 0.0f, z1i);
+            glTexCoord2f(x2i*scale+0.5f, z2i*scale+0.5f); glVertex3f(x2i, 0.0f, z2i);
+            glTexCoord2f(x2o*scale+0.5f, z2o*scale+0.5f); glVertex3f(x2o, 0.0f, z2o);
+            glTexCoord2f(x1o*scale+0.5f, z1o*scale+0.5f); glVertex3f(x1o, 0.0f, z1o);
+        glEnd();
+    }
+
+    // ── INFIELD — brighter green texture ────────────────────
+    glBindTexture(GL_TEXTURE_2D, grassTexInfield);
+
+    for (int i = 0; i < segments; i++) {
+        float t1 = i       * 2 * PI / segments;
+        float t2 = (i + 1) * 2 * PI / segments;
+
+        float x1 = 11.0f * cos(t1), z1 = 11.0f * sin(t1);
+        float x2 = 11.0f * cos(t2), z2 = 11.0f * sin(t2);
+
+        glBegin(GL_TRIANGLES);
+            glTexCoord2f(0.5f,          0.5f);          glVertex3f(0,  0.01f, 0);
+            glTexCoord2f(x1*scale+0.5f, z1*scale+0.5f); glVertex3f(x1, 0.01f, z1);
+            glTexCoord2f(x2*scale+0.5f, z2*scale+0.5f); glVertex3f(x2, 0.01f, z2);
+        glEnd();
+    }
+
+    glDisable(GL_TEXTURE_2D);
+
+    // ── LINES ────────────────────────────────────────────────
+    glColor3f(1.0f, 1.0f, 1.0f);
+    drawPoly(22.5f, 0.03f, 360);
+}
+
+// ── SINGLE STUMP ────────────────────────────────────────────
+void drawStump(float x, float y, float z) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+
+    // stump shaft
+    glColor3f(1.0f, 1.0f, 1.0f);  // wood color
+    glPushMatrix();
+        glTranslatef(0, 0.3f, 0);
+        glScalef(0.06f, 0.6f, 0.06f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    // bail on top (small horizontal bar)
+     glColor3f(1.0f, 1.0f, 1.0f); 
+    glPushMatrix();
+        glTranslatef(0, 0.62f, 0);
+        glScalef(0.18f, 0.04f, 0.06f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
+void drawWickets() {
+    // pitch runs from Z = -2.5 to Z = +2.5, centred at X=0
+    // stumps at each end: 3 stumps spaced 0.22 apart along X
+
+    float stumpOffsets[3] = { -0.22f, 0.0f, 0.22f };
+    float groundY = 0.0f;
+
+    // ── BATTING END (Z = +2.5) ───────────────────────────────
+    for (int s = 0; s < 3; s++) {
+        drawStump(stumpOffsets[s], groundY, 2.5f);
+    }
+    // bail connecting top of outer two stumps
+     glColor3f(1.0f, 1.0f, 1.0f); 
+    glPushMatrix();
+        glTranslatef(0, 0.62f, 2.5f);
+        glScalef(0.50f, 0.04f, 0.06f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    // ── BOWLING END (Z = -2.5) ───────────────────────────────
+    for (int s = 0; s < 3; s++) {
+        drawStump(stumpOffsets[s], groundY, -2.5f);
+    }
+     glColor3f(1.0f, 1.0f, 1.0f); 
+    glPushMatrix();
+        glTranslatef(0, 0.62f, -2.5f);
+        glScalef(0.50f, 0.04f, 0.06f);
+        glutSolidCube(1);
+    glPopMatrix();
+}
+
+void drawLightCones() {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+
+    int   numPoles   = 6;
+    float coneAlpha  = 0.04f;   // very subtle
+    int   coneSegs   = 24;
+    float coneRadius = 5.0f;    // smaller — lands inside field
+
+    float colX[2] = { -1.0f,  1.0f };
+    float rowY[3] = { -1.0f,  0.0f,  1.0f };
+
+    for (int p = 0; p < numPoles; p++) {
+        float poleAngle   = p * 2 * PI / numPoles;
+        float wx          = 26.5f * cos(poleAngle);
+        float wz          = 26.5f * sin(poleAngle);
+        float boxAngleDeg = (-poleAngle * 180.0f / PI) + 90.0f;
+        float boxAngleRad = boxAngleDeg * PI / 180.0f;
+
+        for (int col = 0; col < 2; col++) {
+            for (int row = 0; row < 3; row++) {
+                float lx_local = colX[col];
+                float ly_local = rowY[row];
+                float lz_local = -0.6f;
+
+                // world position of this circle
+                float lx = wx + lx_local * cos(boxAngleRad)
+                              - lz_local * sin(boxAngleRad);
+                float ly = 15.0f + ly_local;
+                float lz = wz + lx_local * sin(boxAngleRad)
+                              + lz_local * cos(boxAngleRad);
+
+                // cone base lands toward stadium CENTER, not outward
+                // direction from pole toward center
+                float dirX = -wx;
+                float dirZ = -wz;
+                float len  = sqrt(dirX*dirX + dirZ*dirZ);
+                dirX /= len;
+                dirZ /= len;
+
+                // ground centre of cone — shift inward by ~10 units
+                float gx = lx + dirX * 10.0f;
+                float gz = lz + dirZ * 10.0f;
+                float gy = 0.05f;
+
+                // ── cone ──────────────────────────────────────
+                glBegin(GL_TRIANGLE_FAN);
+                    glColor4f(1.0f, 1.0f, 0.85f, coneAlpha * 2.5f);
+                    glVertex3f(lx, ly, lz);   // apex at light
+
+                    for (int k = 0; k <= coneSegs; k++) {
+                        float a = k * 2 * PI / coneSegs;
+                        glColor4f(1.0f, 1.0f, 0.80f, 0.0f);
+                        glVertex3f(gx + coneRadius * cos(a),
+                                   gy,
+                                   gz + coneRadius * sin(a));
+                    }
+                glEnd();
+
+                // ── glow disc at circle ────────────────────────
+                glBegin(GL_TRIANGLE_FAN);
+                    glColor4f(1.0f, 1.0f, 0.95f, 0.45f);
+                    glVertex3f(lx, ly, lz);
+                    for (int k = 0; k <= 18; k++) {
+                        float a = k * 2 * PI / 18;
+                        glColor4f(1.0f, 1.0f, 0.70f, 0.0f);
+                        glVertex3f(lx + 0.35f * cos(a),
+                                   ly + 0.35f * sin(a),
+                                   lz);
+                    }
+                glEnd();
+            }
+        }
+    }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
+GLuint wallTex;
+void generateWallTexture() {
+    const int W = 128, H = 128;
+    unsigned char pixels[W * H * 3];
+
+    srand(77);
+    for (int y = 0; y < H; y++) {
+        for (int x = 0; x < W; x++) {
+            int idx = (y * W + x) * 3;
+
+            // base concrete grey
+            int noise  = (rand() % 30) - 15;
+            // occasional darker streaks (water stains / shadow)
+            int streak = (rand() % 100 < 4) ? -25 : 0;
+
+            int val = 128 + noise + streak;
+            val = val < 0 ? 0 : val > 255 ? 255 : val;
+
+            // very slight warm tint
+            pixels[idx+0] = (unsigned char)(val);
+            pixels[idx+1] = (unsigned char)(val - 3 < 0 ? 0 : val - 3);
+            pixels[idx+2] = (unsigned char)(val - 6 < 0 ? 0 : val - 6);
+        }
+    }
+
+    glGenTextures(1, &wallTex);
+    glBindTexture(GL_TEXTURE_2D, wallTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W, H, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, pixels);
+}
+
+void drawTexturedWall() {
+    int   slices     = 100;
+    float radius     = 25.0f;
+    float wallHeight = 8.0f;
+    float texRepeatS = 8.0f;   // how many times texture wraps around
+    float texRepeatT = 2.0f;   // how many times texture repeats vertically
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, wallTex);
+    glColor3f(0.85f, 0.850f, 0.850f);   
+
+    glBegin(GL_QUAD_STRIP);
+    for (int i = 0; i <= slices; i++) {
+        float theta = 2 * M_PI * i / slices;
+        float x     = radius * cos(theta);
+        float z     = radius * sin(theta);
+
+        float s = (float)i / slices * texRepeatS;
+
+        glTexCoord2f(s, 0.0f);         glVertex3f(x, 0.0f,       z);
+        glTexCoord2f(s, texRepeatT);   glVertex3f(x, wallHeight,  z);
+    }
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+}
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
-    glTranslatef(0, -5, zoom);
+    glTranslatef(posX, -5 + posY, zoom + posZ);
     glRotatef(angleX, 1, 0, 0);
     glRotatef(angleY, 0, 1, 0);
 
     // ===== OUTER WALL =====
-    glColor3f(0.50f, 0.50f, 0.50f);
-    drawCylinder(25, 8);
+    // glColor3f(0.50f, 0.50f, 0.50f);
+    // drawCylinder(25, 8);
+    drawTexturedWall();
     glPushMatrix();
     glTranslatef(0, 3, 0);
+    glColor3f(0.50f, 0.50f, 0.50f);
     drawCylinder(18, 1);
     glPopMatrix();
     //drawAdvertisements();
@@ -472,11 +793,11 @@ void display() {
     // ===== LOWER TIER — white =====
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(4.0f, 4.0f);
-    glColor3f(0.92f, 0.92f, 0.92f);
+    glColor3f(0.75f, 0.75f, 0.75f);
     drawSlantedRing(25, 15, 3, 0, 120);
 
     // ===== UPPER TIER — light grey =====
-    glColor3f(0.72f, 0.72f, 0.74f);
+    glColor3f(0.62f, 0.62f, 0.62f);
     drawSlantedRing(25, 18, 6, 4, 120);
     glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -509,9 +830,11 @@ void display() {
     drawPoly(25, 8.01f, 18);
     drawFlagPoles();              
     // ===== GROUND =====
-    drawGround();
-    drawinnerFeild();
+    // drawGround();
+    // drawinnerFeild();
     drawPitch();
+    drawTexturedGround();
+    drawWickets();
     glColor3f(1, 1, 1);
     drawPoly(14, 0.04f, 360);
 
@@ -588,27 +911,52 @@ void display() {
     glPopMatrix();  // end light box
 
     glPopMatrix();  // end pole position
-}   glutSwapBuffers();
+
+}  
+    drawLightCones();
+     glutSwapBuffers();
 }
 // Controls
 void keyboard(unsigned char key, int x, int y) {
-    if (key == 'w') zoom += 2;
-    if (key == 's') zoom -= 2;
+    switch(key) {
+        // zoom in/out
+        case 'w': zoom += 2;    break;
+        case 's': zoom -= 2;    break;
+
+        // move X
+        case 'a': posX -= 1.0f; break;
+        case 'd': posX += 1.0f; break;
+
+        // move Y
+        case 'q': posY += 1.0f; break;
+        case 'e': posY -= 1.0f; break;
+
+        // move Z
+        case 'z': posZ += 1.0f; break;
+        case 'x': posZ -= 1.0f; break;
+
+        // ESC
+        case 27: exit(0); break;
+    }
     glutPostRedisplay();
 }
 
 void specialKeys(int key, int x, int y) {
-    if (key == GLUT_KEY_LEFT) angleY -= 5;
+    // arrow keys rotate view
+    if (key == GLUT_KEY_LEFT)  angleY -= 5;
     if (key == GLUT_KEY_RIGHT) angleY += 5;
-    if (key == GLUT_KEY_UP) angleX -= 5;
-    if (key == GLUT_KEY_DOWN) angleX += 5;
+    if (key == GLUT_KEY_UP)    angleX -= 5;
+    if (key == GLUT_KEY_DOWN)  angleX += 5;
 
     glutPostRedisplay();
 }
 
+
 void init() {
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.7, 0.7, 0.7, 1);
+    glClearColor(0.55f, 0.55f, 0.58f, 1.0f);
+    generateGrassTextures();
+    generateWallTexture();
 }
 
 void reshape(int w, int h) {
