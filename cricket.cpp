@@ -858,7 +858,8 @@ void display() {
     glDisable(GL_LIGHTING);
 
  // ===== 6 FLOODLIGHTS =====
-    for (int i = 0; i < 6; i++) {
+// ===== 6 FLOODLIGHTS =====
+for (int i = 0; i < 6; i++) {
     float angle = i * 2 * PI / 6.0f;
     float wx = 26.5f * cos(angle);
     float wz = 26.5f * sin(angle);
@@ -866,53 +867,56 @@ void display() {
     glPushMatrix();
     glTranslatef(wx, 0, wz);
 
-    // ── POLE ──────────────
+    // ── POLE ──────────────────────────────────────────────
     glColor3f(0.2f, 0.2f, 0.2f);
     glPushMatrix();
         glTranslatef(0, 7.5f, 0);
-        glPushMatrix();
-            glScalef(0.2f, 15.0f, 0.2f);
-            glutSolidCube(1);
-        glPopMatrix();
+        glScalef(0.2f, 15.0f, 0.2f);
+        glutSolidCube(1);
     glPopMatrix();
 
-    // ── LIGHT BOX  ────────
-
+    // ── LIGHT BOX + RECTANGLE PANEL ───────────────────────
     glPushMatrix();
-        glTranslatef(0, 15.0f, 0);  // top of pole
-        // rotate so -Z of box faces toward stadium center
+        glTranslatef(0, 15.0f, 0);
+        // Rotate so the front face (-Z) points toward stadium center
         glRotatef((-angle * 180.0f / PI) + 90.0f, 0, 1, 0);
 
-        glColor3f(0.2f, 0.2f, 0.2f);
+        // Dark box housing
+        glColor3f(0.15f, 0.15f, 0.15f);
         glPushMatrix();
-            glTranslatef(0, 0, 0);
-            glScalef(3.3f, 4.0f, 1.0f);
+            glScalef(4.0f, 3.0f, 0.6f);
             glutSolidCube(1);
         glPopMatrix();
 
-        // 6 circles on front face (-Z face)
-        glColor3f(1.0f, 1.0f, 0.8f);
-        float colX[2] = { -1.0f,  1.0f };
-        float rowY[3] = { -1.0f,  0.0f,  1.0f };
+        // Single bright rectangle on front face (-Z)
+        // Slightly in front of the box face (z = -0.31)
+        glColor3f(1.0f, 0.98f, 0.80f);
+        float rW = 1.7f;   // half-width
+        float rH = 1.2f;   // half-height
+        float rZ = -0.31f; // just proud of box face
 
-        for (int col = 0; col < 2; col++) {
-            for (int row = 0; row < 3; row++) {
-                glPushMatrix();
-                glTranslatef(colX[col], rowY[row], -0.6f);
-                glBegin(GL_POLYGON);
-                for (int k = 0; k < 36; k++) {
-                    float a = k * 2 * 3.1416f / 36;
-                    glVertex3f(0.25f*cos(a), 0.25f*sin(a), 0.0f);
-                }
-                glEnd();
-                glPopMatrix();
-            }
-        }
-    glPopMatrix();  // end light box
+        glBegin(GL_QUADS);
+            glVertex3f(-rW,  rH, rZ);
+            glVertex3f( rW,  rH, rZ);
+            glVertex3f( rW, -rH, rZ);
+            glVertex3f(-rW, -rH, rZ);
+        glEnd();
 
-    glPopMatrix();  // end pole position
+        // Subtle border around the rectangle
+        glColor3f(0.4f, 0.4f, 0.4f);
+        glLineWidth(1.5f);
+        glBegin(GL_LINE_LOOP);
+            glVertex3f(-rW,  rH, rZ);
+            glVertex3f( rW,  rH, rZ);
+            glVertex3f( rW, -rH, rZ);
+            glVertex3f(-rW, -rH, rZ);
+        glEnd();
+        glLineWidth(1.0f);
 
-}  
+    glPopMatrix(); // end light box
+
+    glPopMatrix(); // end pole position
+}
     drawLightCones();
      glutSwapBuffers();
 }
