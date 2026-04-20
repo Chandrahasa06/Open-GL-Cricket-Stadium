@@ -969,7 +969,8 @@ void display() {
     drawCrowd();
 
  // ===== 6 FLOODLIGHTS =====
-    for (int i = 0; i < 6; i++) {
+// ===== 6 FLOODLIGHTS =====
+for (int i = 0; i < 6; i++) {
     float angle = i * 2 * PI / 6.0f;
     float wx = 26.5f * cos(angle);
     float wz = 26.5f * sin(angle);
@@ -977,27 +978,24 @@ void display() {
     glPushMatrix();
     glTranslatef(wx, 0, wz);
 
-    // ── POLE ──────────────
+    // ── POLE ──────────────────────────────────────────────
     glColor3f(0.2f, 0.2f, 0.2f);
     glPushMatrix();
         glTranslatef(0, 7.5f, 0);
-        glPushMatrix();
-            glScalef(0.2f, 15.0f, 0.2f);
-            glutSolidCube(1);
-        glPopMatrix();
+        glScalef(0.2f, 15.0f, 0.2f);
+        glutSolidCube(1);
     glPopMatrix();
 
-    // ── LIGHT BOX  ────────
-
+    // ── LIGHT BOX + RECTANGLE PANEL ───────────────────────
     glPushMatrix();
-        glTranslatef(0, 15.0f, 0);  // top of pole
-        // rotate so -Z of box faces toward stadium center
+        glTranslatef(0, 15.0f, 0);
+        // Rotate so the front face (-Z) points toward stadium center
         glRotatef((-angle * 180.0f / PI) + 90.0f, 0, 1, 0);
 
-        glColor3f(0.2f, 0.2f, 0.2f);
+        // Dark box housing
+        glColor3f(0.15f, 0.15f, 0.15f);
         glPushMatrix();
-            glTranslatef(0, 0, 0);
-            glScalef(3.3f, 4.0f, 1.0f);
+            glScalef(4.0f, 3.0f, 0.6f);
             glutSolidCube(1);
         glPopMatrix();
 if (lightsOn) {
@@ -1026,7 +1024,16 @@ if (lightsOn) {
 }
     glPopMatrix();  // end light box
 
-    glPopMatrix();  // end pole position
+        // Subtle border around the rectangle
+        glColor3f(0.4f, 0.4f, 0.4f);
+        glLineWidth(1.5f);
+        glBegin(GL_LINE_LOOP);
+            glVertex3f(-rW,  rH, rZ);
+            glVertex3f( rW,  rH, rZ);
+            glVertex3f( rW, -rH, rZ);
+            glVertex3f(-rW, -rH, rZ);
+        glEnd();
+        glLineWidth(1.0f);
 
 }  
 if (lightsOn) {
