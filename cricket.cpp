@@ -8,6 +8,7 @@ float zoom = -60;
 float posX = 0.0f;
 float posY = 0.0f;
 float posZ = 0.0f;
+bool lightsOn = true;
 
 // Draw circle (for field)
 void drawCircle(float radius, float height) {
@@ -634,81 +635,69 @@ void drawLightCones() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
-    int   numPoles   = 6;
-    float coneAlpha  = 0.04f;   // very subtle
-    int   coneSegs   = 24;
-    float coneRadius = 5.0f;    // smaller — lands inside field
+    int   coneSegs   = 32;
+    float coneRadius = 12.0f;  // wide spread on field
 
-    float colX[2] = { -1.0f,  1.0f };
-    float rowY[3] = { -1.0f,  0.0f,  1.0f };
-
-    for (int p = 0; p < numPoles; p++) {
-        float poleAngle   = p * 2 * PI / numPoles;
-        float wx          = 26.5f * cos(poleAngle);
-        float wz          = 26.5f * sin(poleAngle);
-        float boxAngleDeg = (-poleAngle * 180.0f / PI) + 90.0f;
+    for (int p = 0; p < 6; p++) {
+        float angle       = p * 2 * PI / 6.0f;
+        float wx          = 26.5f * cos(angle);
+        float wz          = 26.5f * sin(angle);
+        float dirX        = -cos(angle);
+        float dirZ        = -sin(angle);
+        float boxAngleDeg = (-angle * 180.0f / PI) + 90.0f;
         float boxAngleRad = boxAngleDeg * PI / 180.0f;
 
-        for (int col = 0; col < 2; col++) {
-            for (int row = 0; row < 3; row++) {
-                float lx_local = colX[col];
-                float ly_local = rowY[row];
-                float lz_local = -0.6f;
+        // single cone from CENTER of light box
+        float lx = wx - 0.6f * sin(boxAngleRad);
+        float ly = 15.0f;
+        float lz = wz + 0.6f * cos(boxAngleRad);
 
-                // world position of this circle
-                float lx = wx + lx_local * cos(boxAngleRad)
-                              - lz_local * sin(boxAngleRad);
-                float ly = 15.0f + ly_local;
-                float lz = wz + lx_local * sin(boxAngleRad)
-                              + lz_local * cos(boxAngleRad);
+        // cone base on field toward center
+        float shift = 24.0f;
+        float gx    = wx + dirX * shift;
+        float gz    = wz + dirZ * shift;
+        float gy    = 0.05f;
 
-                // cone base lands toward stadium CENTER, not outward
-                // direction from pole toward center
-                float dirX = -wx;
-                float dirZ = -wz;
-                float len  = sqrt(dirX*dirX + dirZ*dirZ);
-                dirX /= len;
-                dirZ /= len;
-
-                // ground centre of cone — shift inward by ~10 units
-                float gx = lx + dirX * 10.0f;
-                float gz = lz + dirZ * 10.0f;
-                float gy = 0.05f;
-
-                // ── cone ──────────────────────────────────────
-                glBegin(GL_TRIANGLE_FAN);
-                    glColor4f(1.0f, 1.0f, 0.85f, coneAlpha * 2.5f);
-                    glVertex3f(lx, ly, lz);   // apex at light
-
-                    for (int k = 0; k <= coneSegs; k++) {
-                        float a = k * 2 * PI / coneSegs;
-                        glColor4f(1.0f, 1.0f, 0.80f, 0.0f);
-                        glVertex3f(gx + coneRadius * cos(a),
-                                   gy,
-                                   gz + coneRadius * sin(a));
-                    }
-                glEnd();
-
-                // ── glow disc at circle ────────────────────────
-                glBegin(GL_TRIANGLE_FAN);
-                    glColor4f(1.0f, 1.0f, 0.95f, 0.45f);
-                    glVertex3f(lx, ly, lz);
-                    for (int k = 0; k <= 18; k++) {
-                        float a = k * 2 * PI / 18;
-                        glColor4f(1.0f, 1.0f, 0.70f, 0.0f);
-                        glVertex3f(lx + 0.35f * cos(a),
-                                   ly + 0.35f * sin(a),
-                                   lz);
-                    }
-                glEnd();
+        // outer cone (wide, very transparent)
+        glBegin(GL_TRIANGLE_FAN);
+            glColor4f(1.0f, 1.0f, 0.85f, 0.12f);
+            glVertex3f(lx, ly, lz);
+            for (int k = 0; k <= coneSegs; k++) {
+                float a = k * 2 * PI / coneSegs;
+                glColor4f(1.0f, 1.0f, 0.80f, 0.0f);
+                glVertex3f(gx + coneRadius * cos(a), gy,
+                           gz + coneRadius * sin(a));
             }
-        }
+        glEnd();
+
+        // inner cone (tight, slightly brighter)
+        glBegin(GL_TRIANGLE_FAN);
+            glColor4f(1.0f, 1.0f, 0.90f, 0.18f);
+            glVertex3f(lx, ly, lz);
+            for (int k = 0; k <= coneSegs; k++) {
+                float a = k * 2 * PI / coneSegs;
+                glColor4f(1.0f, 1.0f, 0.85f, 0.0f);
+                glVertex3f(gx + (coneRadius * 0.4f) * cos(a), gy,
+                           gz + (coneRadius * 0.4f) * sin(a));
+            }
+        glEnd();
+
+        // glow at box face
+        glBegin(GL_TRIANGLE_FAN);
+            glColor4f(1.0f, 1.0f, 1.0f, 0.35f);
+            glVertex3f(lx, ly, lz);
+            for (int k = 0; k <= 24; k++) {
+                float a = k * 2 * PI / 24;
+                glColor4f(1.0f, 1.0f, 0.8f, 0.0f);
+                glVertex3f(lx + 1.8f * cos(a),
+                           ly + 1.8f * sin(a), lz);
+            }
+        glEnd();
     }
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
-
 GLuint wallTex;
 void generateWallTexture() {
     const int W = 128, H = 128;
@@ -753,7 +742,7 @@ void drawTexturedWall() {
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, wallTex);
-    glColor3f(0.85f, 0.850f, 0.850f);   
+    glColor3f(0.85f, 0.85f, 0.85f);   
 
     glBegin(GL_QUAD_STRIP);
     for (int i = 0; i <= slices; i++) {
@@ -769,6 +758,127 @@ void drawTexturedWall() {
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
+}
+void drawPerson(float x, float y, float z, float r, float g, float b) {
+    glColor3f(r, g, b);
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    float s = 0.18f;  // scale
+
+    // head
+    glPushMatrix();
+        glTranslatef(0, s*2.2f, 0);
+        glScalef(s*0.7f, s*0.7f, s*0.3f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    // body
+    glPushMatrix();
+        glTranslatef(0, s*1.1f, 0);
+        glScalef(s*0.9f, s*1.2f, s*0.3f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    // left arm
+    glPushMatrix();
+        glTranslatef(-s*0.9f, s*1.3f, 0);
+        glScalef(s*0.8f, s*0.3f, s*0.3f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    // right arm
+    glPushMatrix();
+        glTranslatef(s*0.9f, s*1.3f, 0);
+        glScalef(s*0.8f, s*0.3f, s*0.3f);
+        glutSolidCube(1);
+    glPopMatrix();
+
+    glPopMatrix();
+}
+void drawCrowd() {
+    float colors[6][3] = {
+        {0.1f, 0.7f, 0.1f},
+        {1.0f, 0.5f, 0.0f},
+        {0.9f, 0.9f, 0.1f},
+        {0.9f, 0.1f, 0.7f},
+        {0.9f, 0.1f, 0.1f},
+        {0.1f, 0.4f, 0.9f},
+    };
+
+    // ── match EXACTLY the seat grid from drawSeatingRows ─────
+    // lower tier: innerR=15, outerR=25, bottomY=0, topY=3, rows=10, cols=480
+    // upper tier: innerR=18, outerR=25, bottomY=4, topY=6,  rows=8,  cols=640
+
+    struct TierInfo {
+        float innerR, outerR, bottomY, topY;
+        int   rows, cols, up;
+    };
+
+    TierInfo tiers[2] = {
+        { 15.0f, 25.0f, 0.0f, 3.0f, 10, 480, 0 },
+        { 18.0f, 25.0f, 4.0f, 6.0f,  8, 640, 1 },
+    };
+
+    float s = 0.10f;  // person scale — small enough to fit on seat
+
+    for (int t = 0; t < 2; t++) {
+        TierInfo& T = tiers[t];
+
+        int   sectionCount   = 30;
+        int   colsPerSection = T.cols / sectionCount;
+        float gapFraction    = 0.12f;
+        float seatFrac       = 0.72f;
+
+        for (int col = 0; col < T.cols; col++) {
+            int   secIdx   = col / colsPerSection;
+            float posInSec = (float)(col % colsPerSection) / colsPerSection;
+            if (posInSec < gapFraction) continue;  // skip walkway
+
+            // mid angle of this seat column
+            float midAngle = (col + 0.5f) * 2 * PI / T.cols;
+            float cosA     = cos(midAngle);
+            float sinA     = sin(midAngle);
+
+            for (int row = 0; row < T.rows; row++) {
+                // exact same interpolation as drawSeatingRows
+                float t0 = ((float)row + (1.0f - seatFrac) * 0.5f) / T.rows;
+                float r0 = T.innerR + t0 * (T.outerR - T.innerR);
+                float y0 = T.bottomY + t0 * (T.topY - T.bottomY) + 0.05f;
+
+                float x = r0 * cosA;
+                float z = r0 * sinA;
+                float y = y0 + 0.05f;  // sit just above seat surface
+
+                int colorIdx = (col * 3 + row * 7 + t * 11) % 6;
+                float cr = colors[colorIdx][0];
+                float cg = colors[colorIdx][1];
+                float cb = colors[colorIdx][2];
+
+                glPushMatrix();
+                glTranslatef(x, y, z);
+                // face toward field center
+                glRotatef(-midAngle * 180.0f / PI + 180.0f, 0, 1, 0);
+
+                glColor3f(cr, cg, cb);
+
+                // head
+                glPushMatrix();
+                    glTranslatef(0, s*2.0f, 0);
+                    glScalef(s*0.65f, s*0.65f, s*0.35f);
+                    glutSolidCube(1);
+                glPopMatrix();
+
+                // body
+                glPushMatrix();
+                    glTranslatef(0, s*1.0f, 0);
+                    glScalef(s*0.80f, s*1.0f, s*0.35f);
+                    glutSolidCube(1);
+                glPopMatrix();
+
+                glPopMatrix();
+            }
+        }
+    }
 }
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -856,6 +966,7 @@ void display() {
     glDisable(GL_CULL_FACE);
 
     glDisable(GL_LIGHTING);
+    drawCrowd();
 
  // ===== 6 FLOODLIGHTS =====
     for (int i = 0; i < 6; i++) {
@@ -889,31 +1000,38 @@ void display() {
             glScalef(3.3f, 4.0f, 1.0f);
             glutSolidCube(1);
         glPopMatrix();
-
-        // 6 circles on front face (-Z face)
-        glColor3f(1.0f, 1.0f, 0.8f);
-        float colX[2] = { -1.0f,  1.0f };
-        float rowY[3] = { -1.0f,  0.0f,  1.0f };
-
-        for (int col = 0; col < 2; col++) {
-            for (int row = 0; row < 3; row++) {
-                glPushMatrix();
-                glTranslatef(colX[col], rowY[row], -0.6f);
-                glBegin(GL_POLYGON);
-                for (int k = 0; k < 36; k++) {
-                    float a = k * 2 * 3.1416f / 36;
-                    glVertex3f(0.25f*cos(a), 0.25f*sin(a), 0.0f);
-                }
-                glEnd();
-                glPopMatrix();
-            }
-        }
+if (lightsOn) {
+    glColor3f(1.0f, 1.0f, 0.85f);
+    glPushMatrix();
+        glTranslatef(0, 0, -0.55f);
+        glBegin(GL_QUADS);
+            glVertex3f(-1.5f, -1.8f, 0);
+            glVertex3f( 1.5f, -1.8f, 0);
+            glVertex3f( 1.5f,  1.8f, 0);
+            glVertex3f(-1.5f,  1.8f, 0);
+        glEnd();
+    glPopMatrix();
+} else {
+    // dark off state
+    glColor3f(0.15f, 0.15f, 0.10f);
+    glPushMatrix();
+        glTranslatef(0, 0, -0.55f);
+        glBegin(GL_QUADS);
+            glVertex3f(-1.5f, -1.8f, 0);
+            glVertex3f( 1.5f, -1.8f, 0);
+            glVertex3f( 1.5f,  1.8f, 0);
+            glVertex3f(-1.5f,  1.8f, 0);
+        glEnd();
+    glPopMatrix();
+}
     glPopMatrix();  // end light box
 
     glPopMatrix();  // end pole position
 
 }  
+if (lightsOn) {
     drawLightCones();
+}
      glutSwapBuffers();
 }
 // Controls
@@ -934,6 +1052,9 @@ void keyboard(unsigned char key, int x, int y) {
         // move Z
         case 'z': posZ += 1.0f; break;
         case 'x': posZ -= 1.0f; break;
+
+        case 'l': lightsOn = !lightsOn; break;  // L key toggles lights
+        case 'L': lightsOn = !lightsOn; break;
 
         // ESC
         case 27: exit(0); break;
