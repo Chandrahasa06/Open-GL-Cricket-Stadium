@@ -13,8 +13,7 @@ bool lightsOn = true;
 
 #define PI 3.14159265359
 
-// ── GEOMETRY HELPERS ────────────────────────────────────────
-
+//  GEOMETRY HELPERS 
 void drawCircle(float radius, float height) {
     glBegin(GL_POLYGON);
     for (int i = 0; i < 360; i++) {
@@ -63,7 +62,7 @@ void drawSlantedRing(float outerR, float innerR, float topH, float bottomH, int 
     }
 }
 
-// ── PITCH ────────────────────────────────────────────────────
+//  PITCH 
 
 void drawPitch() {
     glColor3f(0.8f, 0.7f, 0.5f);
@@ -75,13 +74,12 @@ void drawPitch() {
     glEnd();
 }
 
-// ── WICKETS ──────────────────────────────────────────────────
-
+//  WICKETS 
 void drawStump(float x, float y, float z) {
     glPushMatrix();
     glTranslatef(x, y, z);
     glColor3f(1.0f, 1.0f, 1.0f);
-    // shaft — shorter and thinner than before (0.55x scale)
+    // shaft
     glPushMatrix();
         glTranslatef(0, 0.16f, 0);
         glScalef(0.033f, 0.33f, 0.033f);
@@ -97,19 +95,25 @@ void drawStump(float x, float y, float z) {
 }
 
 void drawWickets() {
-    // stump spacing reduced proportionally
     float stumpOffsets[3] = { -0.12f, 0.0f, 0.12f };
     float groundY = 0.0f;
     for (int s = 0; s < 3; s++) drawStump(stumpOffsets[s], groundY,  2.5f);
     glColor3f(1,1,1);
-    glPushMatrix(); glTranslatef(0,0.34f,2.5f);  glScalef(0.28f,0.022f,0.033f); glutSolidCube(1); glPopMatrix();
+    glPushMatrix(); 
+        glTranslatef(0,0.34f,2.5f);  
+        glScalef(0.28f,0.022f,0.033f); 
+        glutSolidCube(1); 
+    glPopMatrix();
     for (int s = 0; s < 3; s++) drawStump(stumpOffsets[s], groundY, -2.5f);
     glColor3f(1,1,1);
-    glPushMatrix(); glTranslatef(0,0.34f,-2.5f); glScalef(0.28f,0.022f,0.033f); glutSolidCube(1); glPopMatrix();
+    glPushMatrix(); 
+        glTranslatef(0,0.34f,-2.5f); 
+        glScalef(0.28f,0.022f,0.033f); 
+        glutSolidCube(1); 
+    glPopMatrix();
 }
 
-// ── GRASS TEXTURES ───────────────────────────────────────────
-
+//  GRASS TEXTURES 
 void generateGrassTextures() {
     srand(42);
     {
@@ -175,7 +179,7 @@ void drawTexturedGround() {
     glColor3f(1,1,1); drawPoly(22.5f,0.03f,360);
 }
 
-// ── WALL TEXTURE ─────────────────────────────────────────────
+//  WALL TEXTURE 
 
 void generateWallTexture() {
     const int W=128,H=128; unsigned char pixels[W*H*3];
@@ -209,19 +213,24 @@ void drawTexturedWall() {
     glEnd(); glDisable(GL_TEXTURE_2D);
 }
 
-// ── BOUNDARY BOXES ───────────────────────────────────────────
+//  BOUNDARY BOXES 
 
 void drawBoundaryBoxes() {
     int count=10; float wallR=25;
     for(int i=0;i<count;i++){
         float angle=i*2*PI/count, cx=wallR*cos(angle), cz=wallR*sin(angle);
-        glPushMatrix(); glTranslatef(cx,0,cz);
+        glPushMatrix(); 
+        glTranslatef(cx,0,cz);
         glRotatef(-angle*180.0f/PI+90,0,1,0);
         float px[6]={-3,3,3,1,-1,-3}, py[6]={0,0,4,5,5,4}, sx=0.55f,sy=0.45f,depth=2.2f;
         glColor3f(0.92f,0.92f,0.92f);
-        glBegin(GL_POLYGON); for(int v=0;v<6;v++) glVertex3f(px[v]*sx,py[v]*sy,-depth*0.5f); glEnd();
+        glBegin(GL_POLYGON); for(int v=0;v<6;v++) 
+        glVertex3f(px[v]*sx,py[v]*sy,-depth*0.5f); 
+        glEnd();
         glColor3f(0.80f,0.80f,0.80f);
-        glBegin(GL_POLYGON); for(int v=5;v>=0;v--) glVertex3f(px[v]*sx,py[v]*sy,depth*0.5f); glEnd();
+        glBegin(GL_POLYGON); for(int v=5;v>=0;v--) 
+        glVertex3f(px[v]*sx,py[v]*sy,depth*0.5f); 
+        glEnd();
         for(int v=0;v<6;v++){
             int next=(v+1)%6; float shade=(v==3||v==4)?0.85f:0.68f;
             glColor3f(shade,shade,shade);
@@ -238,7 +247,7 @@ void drawBoundaryBoxes() {
     }
 }
 
-// ── ADVERTISEMENTS ───────────────────────────────────────────
+//  ADVERTISEMENTS 
 
 void drawAdvertisements() {
     const char* ads[]={"PEPSI","NIKE","SAMSUNG","ADIDAS","COCA COLA","TOYOTA","AMAZON","RELIANCE"};
@@ -262,7 +271,7 @@ void drawAdvertisements() {
     glDepthFunc(GL_LESS);
 }
 
-// ── FLAG POLES ───────────────────────────────────────────────
+//  FLAG POLES 
 
 void drawFlagPoles() {
     int sides=18; float polyR=25,baseY=8.01f;
@@ -288,7 +297,7 @@ void drawFlagPoles() {
     }
 }
 
-// ── SEATING ROWS ─────────────────────────────────────────────
+//  SEATING ROWS  
 
 void drawSeatingRows(float innerR,float outerR,float bottomY,float topY,int rows,int cols,int up){
     int sectionCount=30, colsPerSection=cols/sectionCount;
@@ -316,7 +325,7 @@ void drawSeatingRows(float innerR,float outerR,float bottomY,float topY,int rows
     }
 }
 
-// ── CROWD (restored) ─────────────────────────────────────────
+//  CROWD FIGURES    
 
 void drawCrowd() {
     float colors[6][3]={{0.1f,0.7f,0.1f},{1,0.5f,0},{0.9f,0.9f,0.1f},{0.9f,0.1f,0.7f},{0.9f,0.1f,0.1f},{0.1f,0.4f,0.9f}};
@@ -349,12 +358,7 @@ void drawCrowd() {
         }
     }
 }
-
-// ─────────────────────────────────────────────────────────────
-//  ON-FIELD FIGURE HELPERS
-// ─────────────────────────────────────────────────────────────
-
-// Generic standing person: torso colour, skin colour, optional scale
+//  ON-FIELD FIGURE HELPERS: torso colour, skin colour, optional scale
 static void drawPerson(float tR,float tG,float tB,
                        float hR,float hG,float hB, float sc=1.0f){
     // legs
@@ -439,7 +443,7 @@ static void drawCamera(){
     glPopMatrix();
 }
 
-// Cameraman in dark clothes
+// Cameraman 
 static void drawCameraman(){
     drawPerson(0.25f,0.25f,0.25f, 0.80f,0.65f,0.50f, 0.88f);
 }
@@ -463,7 +467,7 @@ static void drawBench(){
     }
 }
 
-// Drink cart (white box, cross logo, two wheels, handle)
+// Drink cart 
 static void drawDrinkCart(){
     glColor3f(0.88f,0.88f,0.88f);
     glPushMatrix();
@@ -493,20 +497,12 @@ static void drawDrinkCart(){
     glPopMatrix();
 }
 
-// ─────────────────────────────────────────────────────────────
-//  MAIN ON-FIELD SCENE
-//  Pitch runs along Z axis: batting end z=+2.5, bowling end z=-2.5
-//  Boundary circle r=22.5.  All fielders kept inside r<=20.
-// ─────────────────────────────────────────────────────────────
 void drawOnFieldScene(){
 
     const float SKIN=0.80f, SKING=0.65f, SKINB=0.50f;
 
-    // ════════════════════════════════════════════
     //  2 BATSMEN  (red kit, helmet, bat)
-    // ════════════════════════════════════════════
-
-    // Striker — batting end (+z), faces bowling end (-z)
+    // Striker — batting end 
     glPushMatrix();
         glTranslatef(0.35f, 0.0f, 2.0f);
         glRotatef(180, 0,1,0);
@@ -522,34 +518,23 @@ void drawOnFieldScene(){
         drawHelmet(); drawBat();
     glPopMatrix();
 
-    // ════════════════════════════════════════════
     //  UMPIRE  — white coat, stands right beside
-    //  the bowling-end stumps (z = -2.5), off-side
-    // ════════════════════════════════════════════
     glPushMatrix();
         glTranslatef(1.2f, 0.0f, -2.5f);
         glRotatef(90, 0,1,0);   // faces down the pitch
         drawPerson(0.93f,0.93f,0.90f, SKIN,SKING,SKINB);
     glPopMatrix();
 
-    // ════════════════════════════════════════════
     //  BLUE TEAM — 11 players
-    //
-    //  [0]  Wicketkeeper — crouches behind batting-end stumps
-    //  [1]  Bowler       — run-up position near bowling crease
-    //  [2..10] 9 fielders, all inside r=20
-    // ════════════════════════════════════════════
-
     // [0] Wicketkeeper: just behind batting-end stumps (z=+2.5)
     glPushMatrix();
         glTranslatef(0.0f, 0.0f, 3.2f);
         glRotatef(0, 0,1,0);     // faces bowling end
-        // crouched: scale Y down
         glScalef(1.0f, 0.80f, 1.0f);
         drawPerson(0.10f,0.22f,0.82f, SKIN,SKING,SKINB);
     glPopMatrix();
 
-    // [1] Bowler: in his delivery stride, ~5 units behind bowling crease
+    // [1] Bowler: in his delivery stride
     glPushMatrix();
         glTranslatef(0.3f, 0.0f, -5.5f);
         glRotatef(180, 0,1,0);  // faces batting end
@@ -557,7 +542,6 @@ void drawOnFieldScene(){
         // raised bowling arm
         glPushMatrix();
             glTranslatef(0.0f, 0.0f, 0.0f);
-            // arm raised above head
             glColor3f(0.10f,0.22f,0.82f);
             glPushMatrix();
                 glTranslatef(0.12f, 0.60f, 0);
@@ -568,7 +552,7 @@ void drawOnFieldScene(){
         glPopMatrix();
     glPopMatrix();
 
-    // [2..10] 9 fielders — all inside r=20, realistic cricket positions
+    // 9 fielders 
     struct FPos{ float x,z,face; const char* role; };
     FPos fielders[9]={
         {  1.5f,  4.5f, 185.0f, "1st slip"     },
@@ -589,12 +573,7 @@ void drawOnFieldScene(){
         glPopMatrix();
     }
 
-    // ════════════════════════════════════════════
-    //  BOUNDARY — cameras, bench, drink carts
-    //  All at r ≈ 22, inside the 22.5 boundary
-    // ════════════════════════════════════════════
-
-    // 3 cameras + cameramen evenly spaced
+    // 3 cameras + cameramen 
     float camAng[3]={ 80.0f, 200.0f, 320.0f };
     for(int i=0;i<3;i++){
         float ang = camAng[i]*PI/180.0f;
@@ -616,7 +595,7 @@ void drawOnFieldScene(){
         glPopMatrix();
     }
 
-    // Bench at 50° (tangent to boundary)
+    // Bench 
     {
         float ang = 50.0f*PI/180.0f;
         float bx  = 14.5f*cos(ang);
@@ -639,7 +618,7 @@ void drawOnFieldScene(){
         glPopMatrix();
     }
 
-    // 2 drink carts at 140° and 160°
+    // 2 drink carts 
     float cartAng[2]={ 140.0f, 160.0f };
     for(int i=0;i<2;i++){
         float ang = cartAng[i]*PI/180.0f;
@@ -653,7 +632,7 @@ void drawOnFieldScene(){
     }
 }
 
-// ── LIGHT CONES ──────────────────────────────────────────────
+//  LIGHT CONES 
 
 void drawLightCones() {
     glEnable(GL_BLEND);
@@ -682,31 +661,21 @@ void drawLightCones() {
     glDepthMask(GL_TRUE); glDisable(GL_BLEND);
 }
 
-// ── LIGHTBOX GRID PANEL ──────────────────────────────────────
-//
-//  Draws a 2-column × 3-row grid of rectangles on the face of
-//  the light box, separated by:
-//    • 1 vertical centre line
-//    • 2 horizontal divider lines (at 1/3 and 2/3 height)
-//
-//  Local space (after the box's own glRotatef):
-//    Panel spans  X: [-1.5, +1.5]   Y: [-1.8, +1.8]   Z face: -0.56
-//
 void drawLightboxGrid() {
     // Panel extents
-    const float PX0 = -1.5f, PX1 = 1.5f;   // left / right edge
-    const float PY0 = -1.8f, PY1 =  1.8f;   // bottom / top edge
-    const float FZ  = -0.56f;               // face Z (just proud of box)
-    const float LZ  =  FZ - 0.01f;          // line Z (on top of face)
-    const float GAP =  0.07f;               // gap between cells
+    const float PX0 = -1.5f, PX1 = 1.5f;   
+    const float PY0 = -1.8f, PY1 =  1.8f;   
+    const float FZ  = -0.56f;              
+    const float LZ  =  FZ - 0.01f;          
+    const float GAP =  0.07f;              
 
-    // Column X boundaries  (2 cols)
+    // Column X boundaries 
     float colX[2][2] = {
-        { PX0,         -GAP * 0.5f },   // left  col
-        {  GAP * 0.5f,  PX1        }    // right col
+        { PX0,         -GAP * 0.5f },   
+        {  GAP * 0.5f,  PX1        }    
     };
 
-    // Row Y boundaries  (3 rows, bottom → top)
+    // Row Y boundaries  
     float rowH = (PY1 - PY0) / 3.0f;          // = 1.2
     float rowY[3][2] = {
         { PY0,              PY0 + rowH - GAP * 0.5f },
@@ -714,7 +683,7 @@ void drawLightboxGrid() {
         { PY0 + 2*rowH + GAP * 0.5f, PY1 }
     };
 
-    // ── 6 cell rectangles ─────────────────────────────────────
+    //  6 cell rectangles 
     if (lightsOn)
         glColor3f(1.00f, 0.97f, 0.78f);   // warm bright white
     else
@@ -733,7 +702,7 @@ void drawLightboxGrid() {
         }
     }
 
-    // ── Divider lines ─────────────────────────────────────────
+    //  Divider lines 
     glColor3f(0.08f, 0.08f, 0.06f);
     glLineWidth(2.2f);
 
@@ -752,7 +721,7 @@ void drawLightboxGrid() {
         glEnd();
     }
 
-    // ── Outer border ──────────────────────────────────────────
+    //  Outer border 
     glColor3f(0.22f, 0.22f, 0.18f);
     glLineWidth(1.8f);
     glBegin(GL_LINE_LOOP);
@@ -764,7 +733,7 @@ void drawLightboxGrid() {
     glLineWidth(1.0f);
 }
 
-// ── MAIN DISPLAY ─────────────────────────────────────────────
+//  MAIN DISPLAY 
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -775,7 +744,11 @@ void display() {
 
     // Outer wall
     drawTexturedWall();
-    glPushMatrix(); glTranslatef(0,3,0); glColor3f(0.5f,0.5f,0.5f); drawCylinder(18,1); glPopMatrix();
+    glPushMatrix(); 
+    glTranslatef(0,3,0); 
+    glColor3f(0.5f,0.5f,0.5f); 
+    drawCylinder(18,1); 
+    glPopMatrix();
     drawBoundaryBoxes();
 
     // Seating rings
@@ -805,10 +778,14 @@ void display() {
 
     // Lit seating rows
     glEnable(GL_LIGHTING); glEnable(GL_LIGHT0);
-    glEnable(GL_COLOR_MATERIAL); glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
+    glEnable(GL_COLOR_MATERIAL); 
+    glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
     GLfloat lpos[]={0,60,0,1}, ldif[]={1,1,1,1}, lamb[]={0.5f,0.5f,0.5f,1};
-    glLightfv(GL_LIGHT0,GL_POSITION,lpos); glLightfv(GL_LIGHT0,GL_DIFFUSE,ldif); glLightfv(GL_LIGHT0,GL_AMBIENT,lamb);
-    glEnable(GL_CULL_FACE); glCullFace(GL_BACK);
+    glLightfv(GL_LIGHT0,GL_POSITION,lpos); 
+    glLightfv(GL_LIGHT0,GL_DIFFUSE,ldif); 
+    glLightfv(GL_LIGHT0,GL_AMBIENT,lamb);
+    glEnable(GL_CULL_FACE); 
+    glCullFace(GL_BACK);
     drawSeatingRows(15,25,0,3,10,480,0);
     drawSeatingRows(18,25,4,6, 8,640,1);
     glDisable(GL_CULL_FACE); glDisable(GL_LIGHTING);
@@ -819,11 +796,10 @@ void display() {
     // On-field players, officials and boundary equipment
     drawOnFieldScene();
 
-    // ── 6 Floodlight towers ──────────────────────────────────
+    //  6 Floodlight towers 
     for (int i = 0; i < 6; i++) {
         float angle = i * 2 * PI / 6.0f;
         float wx = 26.5f * cos(angle), wz = 26.5f * sin(angle);
-
         glPushMatrix();
         glTranslatef(wx, 0, wz);
 
@@ -851,17 +827,15 @@ void display() {
             drawLightboxGrid();
 
         glPopMatrix(); // end light box
-
         glPopMatrix(); // end pole world pos
     }
 
-    // Light cones (only when on)
+    // Light cones 
     if (lightsOn) drawLightCones();
-
     glutSwapBuffers();
 }
 
-// ── INPUT HANDLERS ───────────────────────────────────────────
+//  INPUT HANDLERS 
 
 void keyboard(unsigned char key, int x, int y) {
     switch(key) {
@@ -887,7 +861,7 @@ void specialKeys(int key, int x, int y) {
     glutPostRedisplay();
 }
 
-// ── INIT / RESHAPE / MAIN ────────────────────────────────────
+//  INIT / RESHAPE / MAIN 
 
 void init() {
     glEnable(GL_DEPTH_TEST);
