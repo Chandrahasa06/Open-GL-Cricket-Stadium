@@ -977,28 +977,36 @@ void display() {
 
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
+    case 'W':
     case 'w':
         posY -= 1.0f;
         break;
     case 's':
+    case 'S':
         posY += 1.0f;
         break;
     case 'a':
+    case 'A':
         posX += 1.0f;
         break;
     case 'd':
+    case 'D':   
         posX -= 1.0f;
         break;
     case 'q':
+    case 'Q':
         zoom += 2;
         break;
     case 'e':
+    case 'E':
         zoom -= 2;
         break;
     case 'z':
+    case 'Z':
         posZ += 1.0f;
         break;
     case 'x':
+    case 'X':
         posZ -= 1.0f;
         break;
     case 'l':
